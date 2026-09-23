@@ -10,20 +10,79 @@ type Props = {
   items: NavGroup[];
   className?: string;
   onNavigate?: () => void;
+  orientation?: "horizontal" | "vertical";
 };
 
 /**
- * Primary nav — used in header (desktop) and mobile sheet.
- * Items with `children` render a small disclosure.
+ * Nav — Supports both desktop horizontal navigation with dropdowns
+ * and vertical navigation for mobile sheets or sidebars.
  */
-export function Nav({ items, className, onNavigate }: Props) {
+export function Nav({
+  items,
+  className,
+  onNavigate,
+  orientation = "horizontal",
+}: Props) {
   const pathname = usePathname();
 
+  if (orientation === "vertical") {
+    return (
+      <nav className={cn("flex flex-col gap-1", className)} aria-label="Primary">
+        <ul className="flex flex-col gap-0.5">
+          {items.map((item) => {
+            const isActive =
+              pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href + "/"));
+            const hasChildren = !!item.children?.length;
+
+            return (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  onClick={onNavigate}
+                  className={cn(
+                    "block py-2 font-sans text-[0.9375rem] leading-snug text-ink transition-colors duration-150",
+                    "hover:text-accent",
+                    isActive && "text-accent font-medium"
+                  )}
+                >
+                  {item.label}
+                </Link>
+                {hasChildren && (
+                  <ul className="ml-4 border-l border-rule pl-3 mt-0.5 mb-1 space-y-1">
+                    {item.children!.map((child) => {
+                      const childActive = pathname === child.href;
+                      return (
+                        <li key={child.href}>
+                          <Link
+                            href={child.href}
+                            onClick={onNavigate}
+                            className={cn(
+                              "block py-1 font-sans text-[0.875rem] leading-snug text-ink-muted transition-colors duration-150",
+                              "hover:text-ink",
+                              childActive && "text-accent font-medium"
+                            )}
+                          >
+                            {child.label}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+    );
+  }
+
+  // Desktop Horizontal Navigation
   return (
-    <nav className={cn("flex flex-col gap-1", className)} aria-label="Primary">
-      <ul className="flex flex-col gap-0.5">
+    <nav className={cn("flex items-center gap-1 xl:gap-2", className)} aria-label="Primary">
+      <ul className="flex items-center gap-1 xl:gap-2">
         {items.map((item) => (
-          <NavRow
+          <DesktopNavItem
             key={item.href}
             item={item}
             pathname={pathname}
@@ -35,7 +94,7 @@ export function Nav({ items, className, onNavigate }: Props) {
   );
 }
 
-function NavRow({
+function DesktopNavItem({
   item,
   pathname,
   onNavigate,
@@ -44,44 +103,100 @@ function NavRow({
   pathname: string;
   onNavigate?: () => void;
 }) {
+  const [open, setOpen] = React.useState(false);
+  const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
   const isActive =
-    pathname === item.href || pathname.startsWith(item.href + "/");
+    pathname === item.href ||
+    (item.href !== "/" && pathname.startsWith(item.href + "/")) ||
+    item.children?.some((c) => pathname === c.href);
+
   const hasChildren = !!item.children?.length;
 
+  const handleMouseEnter = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => {
+      setOpen(false), 150;
+    });
+  };
+
   return (
-    <li>
+    <li
+      className="relative"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <Link
         href={item.href}
         onClick={onNavigate}
         className={cn(
-          "block py-2 font-sans text-[0.9375rem] leading-snug text-ink transition-colors duration-150",
-          "hover:text-accent",
-          isActive && "text-accent",
+          "inline-flex items-center gap-1 px-2.5 py-1.5 font-sans text-[0.875rem] transition-all duration-150 rounded-sm",
+          "hover:text-ink hover:bg-paper-warm/80",
+          isActive
+            ? "text-ink font-semibold"
+            : "text-ink-soft/90 hover:text-ink"
         )}
       >
-        {item.label}
+        <span>{item.label}</span>
+        {hasChildren && (
+          <svg
+            className={cn(
+              "w-3 h-3 text-ink-subtle transition-transform duration-200",
+              open && "rotate-180"
+            )}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        )}
       </Link>
+
+      {/* Dropdown Menu */}
       {hasChildren && (
-        <ul className="ml-4 border-l border-rule pl-3 mt-0.5 mb-1">
-          {item.children!.map((child) => {
-            const childActive = pathname === child.href;
-            return (
-              <li key={child.href}>
+        <div
+          className={cn(
+            "absolute left-0 top-full pt-2 z-50 transition-all duration-200 transform origin-top",
+            open
+              ? "opacity-100 scale-100 pointer-events-auto"
+              : "opacity-0 scale-95 pointer-events-none"
+          )}
+        >
+          <div className="w-56 p-2 bg-paper border border-rule shadow-xl rounded-md space-y-1">
+            {item.children!.map((child) => {
+              const isChildActive = pathname === child.href;
+              return (
                 <Link
+                  key={child.href}
                   href={child.href}
-                  onClick={onNavigate}
+                  onClick={() => {
+                    setOpen(false);
+                    onNavigate?.();
+                  }}
                   className={cn(
-                    "block py-1.5 font-sans text-[0.875rem] leading-snug text-ink-muted transition-colors duration-150",
-                    "hover:text-ink",
-                    childActive && "text-ink",
+                    "block px-3 py-2 rounded text-[0.875rem] font-sans transition-colors duration-150",
+                    isChildActive
+                      ? "bg-paper-warm text-accent font-medium"
+                      : "text-ink-soft hover:bg-paper-warm hover:text-ink"
                   )}
                 >
-                  {child.label}
+                  <span className="block font-medium">{child.label}</span>
+                  {child.description && (
+                    <span className="block text-[0.75rem] text-ink-subtle mt-0.5 line-clamp-1">
+                      {child.description}
+                    </span>
+                  )}
                 </Link>
-              </li>
-            );
-          })}
-        </ul>
+              );
+            })}
+          </div>
+        </div>
       )}
     </li>
   );

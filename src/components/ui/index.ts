@@ -12,3 +12,4 @@ export { Badge } from "./badge";
 export { Divider } from "./divider";
 export { Prose } from "./prose";
 export { InlineLink } from "./link";
+export { Reveal, StaggerContainer } from "./motion";
