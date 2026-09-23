@@ -1,0 +1,149 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =========================================================================
+   COMPSSA — Global design system
+   Editorial. Institutional. Minimal. Never AI-gradient, never glassmorphic.
+   ========================================================================= */
+
+@layer base {
+  :root {
+    /* Existing tokens (HSL versions of our editorial palette) */
+    --background: 60 20% 98%;            /* paper #FAFAF7 */
+    --foreground: 60 5% 4%;              /* ink #0B0B0A */
+    --rule: 36 16% 87%;                  /* hairline #E2DFD8 */
+    --accent: 0 60% 30%;                 /* burgundy #7A1F1F */
+
+    /* shadcn-aligned semantic tokens (kept in our palette) */
+    --border: 36 16% 87%;
+    --input: 36 16% 87%;
+    --ring: 60 5% 4%;
+    --secondary: 36 18% 92%;             /* paper-warm */
+    --secondary-foreground: 60 5% 4%;
+    --muted: 36 18% 92%;
+    --muted-foreground: 60 3% 42%;
+    --destructive: 0 60% 30%;
+    --destructive-foreground: 60 20% 98%;
+    --popover: 60 20% 98%;
+    --popover-foreground: 60 5% 4%;
+    --card: 60 20% 98%;
+    --card-foreground: 60 5% 4%;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    -moz-tab-size: 4;
+    tab-size: 4;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "kern", "liga", "calt", "ss01";
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-paper text-ink antialiased;
+    font-synthesis-weight: none;
+  }
+
+  ::selection {
+    background: hsl(var(--accent) / 0.18);
+    color: hsl(var(--foreground));
+  }
+
+  /* Editorial focus ring — restrained, never glowing. */
+  :where(a, button, input, textarea, select, [tabindex]):focus-visible {
+    outline: 2px solid hsl(var(--accent));
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  hr {
+    @apply border-0 border-t border-rule;
+  }
+
+  /* Anchor underline reset; we control underlines per-component. */
+  a {
+    text-decoration: none;
+  }
+
+  img,
+  picture,
+  video,
+  canvas,
+  svg {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif text-ink;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+}
+
+@layer components {
+  /* Hairline rule — used between editorial sections. */
+  .rule {
+    @apply h-px w-full bg-rule;
+  }
+
+  /* A typographic eyebrow — small caps line above section titles. */
+  .eyebrow {
+    @apply font-sans text-eyebrow uppercase text-ink-subtle tracking-[0.14em];
+  }
+
+  /* A subdued inline link used in prose contexts. */
+  .prose-link {
+    @apply text-ink underline decoration-rule decoration-1 underline-offset-4 transition-colors duration-200 ease-editorial hover:decoration-accent hover:text-accent;
+  }
+
+  /* Editorial body prose. */
+  .prose-editorial {
+    @apply font-serif text-[1.0625rem] leading-[1.7] text-ink-soft;
+  }
+  .prose-editorial p + p {
+    @apply mt-5;
+  }
+  .prose-editorial a {
+    @apply prose-link;
+  }
+
+  /* Container helper — already provided by tailwind `container`, kept for parity. */
+  .editorial-container {
+    @apply mx-auto w-full max-w-[1240px] px-5 sm:px-6 lg:px-10;
+  }
+
+  /* Subtle hover for card-like surfaces — never a glow. */
+  .surface {
+    @apply bg-paper border border-rule transition-colors duration-200 ease-editorial hover:border-rule-strong;
+  }
+}
+
+@layer utilities {
+  /* Respect users who prefer reduced motion. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-pretty {
+    text-wrap: pretty;
+  }
+}

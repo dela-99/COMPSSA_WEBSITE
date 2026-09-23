@@ -1,0 +1,6 @@
+# robots.txt — Phase 1
+# Public site is indexable; admin is not.
+User-agent: *
+Allow: /
+Disallow: /admin
+Sitemap: /sitemap.xml
